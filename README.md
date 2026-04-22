@@ -28,25 +28,64 @@ Aplikasi ini menggunakan pendekatan **Edge Computing**, di mana seluruh perhitun
 2.  **Privacy**: Data rekaman kamera tidak pernah dikirim ke server pusat.
 3.  **Offline Capability**: Pasien dapat tetap berlatih meskipun tanpa koneksi internet.
 
-## 🚀 Memulai (Lokal)
+## 🏗️ Persiapan Sistem
 
-1. **Prasyarat**
-   - Flutter SDK (v3.0.0+)
-   - Android Studio / VS Code
-   - Perangkat Android fisik (disarankan untuk performa ML optimal)
+### 1. Prasyarat Perangkat Lunak
+Sebelum menjalankan aplikasi, pastikan Anda telah menginstal:
 
-2. **Clone Repository**
+- **Linux (Ubuntu/Debian)**:
+  ```bash
+  sudo apt update
+  sudo apt install git openjdk-17-jdk -y
+  sudo snap install flutter --classic
+  ```
+
+- **Windows (PowerShell)**:
+  ```powershell
+  # Instal via winget
+  winget install -e --id Kitware.CMake
+  winget install -e --id Git.Git
+  winget install -e --id Oracle.JDK.17
+  winget install -e --id Flutter.Flutter
+  ```
+
+- **Bantuan Tambahan**:
+  Setelah instalasi selesai, jalankan perintah berikut untuk mengecek status sistem:
+  ```bash
+  flutter doctor
+  ```
+
+- **Android Studio**:
+  [Download Android Studio](https://developer.android.com/studio) - Setelah instal, pastikan **Command-line Tools** dan **Android SDK Platform** sudah terpasang via SDK Manager.
+
+### 2. Koneksi ke HP Fisik (Debugging)
+Untuk performa deteksi AI yang optimal, **sangat disarankan menggunakan HP asli** daripada emulator. Berikut cara menyambungkannya:
+1. **Aktifkan Opsi Pengembang**:
+   - Buka *Setelan* HP > *Tentang Telepon*.
+   - Ketuk **Nomor Versi (Build Number)** sebanyak 7 kali hingga muncul pesan "Anda sekarang adalah pengembang".
+2. **Aktifkan USB Debugging**:
+   - Masuk ke *Setelan Tambahan* > *Opsi Pengembang*.
+   - Aktifkan **Debugging USB**.
+3. **Hubungkan Kabel**:
+   - Sambungkan HP ke Laptop/PC via kabel data.
+   - Jika muncul perintah "Izinkan Debugging USB?", pilih **Selalu Izinkan** > **OK**.
+4. **Cek Koneksi**:
+   - Jalankan perintah `flutter devices` di terminal untuk memastikan HP Anda terdeteksi.
+
+## 🚀 Instalasi & Menjalankan Aplikasi
+
+1. **Clone Repository**
    ```bash
    git clone https://github.com/Hesyitena/GerakPulih.git
    cd gerakpulih_flutter
    ```
 
-3. **Install Dependencies**
+2. **Install Dependencies**
    ```bash
    flutter pub get
    ```
 
-4. **Jalankan Aplikasi**
+3. **Jalankan Aplikasi**
    ```bash
    flutter run
    ```

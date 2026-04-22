@@ -62,10 +62,23 @@ class _HomeScreenState extends State<HomeScreen> {
       height: 74,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(99),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.8), width: 1.5),
+        border: Border.all(
+          color: Colors.black.withValues(alpha: 0.1), // Sedikit gelap agar garisnya terlihat tegas
+          width: 1.2,
+        ),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 40, offset: const Offset(0, 16)),
-          BoxShadow(color: Colors.white.withValues(alpha: 0.9), blurRadius: 0, spreadRadius: 0, offset: const Offset(0, 1)),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.12),
+            blurRadius: 30,
+            offset: const Offset(0, 15),
+          ),
+          // Inner light layer for depth
+          BoxShadow(
+            color: Colors.white.withValues(alpha: 0.8),
+            blurRadius: 0,
+            spreadRadius: -1,
+            offset: const Offset(0, 1),
+          ),
         ],
       ),
       child: ClipRRect(

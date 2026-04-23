@@ -78,6 +78,8 @@ lib/
 | State Management | provider | ^6.1.2 | Manajemen state reaktif proporsional |
 | Tipografi | google_fonts | ^6.2.1 | Font Inter/Poppins dari Google Fonts |
 | Target Platform | Android ≥5.0, iOS ≥13.0 | — | Cakupan perangkat pasar Indonesia |
+| **Backend (Rencana)** | **Golang + Gin/Fiber** | **≥1.21** | **Microservice API: konkurensi tinggi, native binary** |
+| **Database (Rencana)** | **PostgreSQL + GORM** | **≥14.0** | **Persistensi data cloud, relasional, open-source** |
 
 ---
 
@@ -164,8 +166,116 @@ Model keamanan GerakPulih berpusat pada prinsip **privasi by design** (*privacy 
 
 Meskipun versi saat ini beroperasi secara mandiri tanpa *backend*, arsitektur sistem dirancang untuk mendukung evolusi bertahap:
 - **Extensibilitas katalog latihan**: Penambahan gerakan baru hanya memerlukan penambahan entri `Exercise` baru pada `exercises_data.dart` dengan konfigurasi `PoseConfig` yang sesuai, tanpa perubahan pada logika deteksi inti.
-- **Abstraksi layanan yang bersih**: `StorageService` dan `TtsService` dapat disubstitusi dengan implementasi berbasis *backend* (misalnya Firebase Firestore menggantikan SharedPreferences) tanpa mengubah logika di lapisan UI dan bisnis, berkat pola antarmuka yang terdefinisi dengan jelas.
-- **Modularitas layar**: Setiap tab diimplementasikan sebagai `StatefulWidget` independen, memudahkan penambahan fitur baru (misalnya modul konsultasi dokter atau program latihan yang dipersonalisasi) sebagai tab tambahan tanpa mengganggu modul yang sudah ada.
+- **Abstraksi layanan yang bersih**: `StorageService` dapat disubstitusi dengan implementasi berbasis *backend* Golang tanpa mengubah logika di lapisan UI, berkat pola antarmuka yang terdefinisi dengan jelas.
+- **Modularitas layar**: Setiap tab diimplementasikan sebagai `StatefulWidget` independen, memudahkan penambahan fitur baru sebagai tab tambahan tanpa mengganggu modul yang sudah ada.
+
+---
+
+## g.7 Rencana Pengembangan Lanjutan: Backend Golang
+
+Pada iterasi pengembangan selanjutnya pasca-kompetisi, sistem GerakPulih direncanakan untuk diperluas dengan komponen *backend* berbasis **Golang**. Keputusan ini didasarkan pada kebutuhan yang muncul seiring peningkatan skala pengguna, yaitu: sinkronisasi data lintas-perangkat, sistem autentikasi terpusat, dan penyediaan *dashboard* pemantauan jarak jauh bagi tenaga medis.
+
+### g.7.1 Rencana Struktur Repositori Backend
+
+Komponen backend akan dikembangkan sebagai repositori terpisah dengan struktur sebagai berikut:
+
+```
+gerakpulih-backend/          # Repositori Golang (terpisah)
+├── main.go                  # Titik masuk server
+├── cmd/
+│   └── server/
+│       └── main.go          # Inisialisasi server dan DI
+├── internal/
+│   ├── handler/             # HTTP handler (controller)
+│   │   ├── auth_handler.go
+│   │   └── session_handler.go
+│   ├── service/             # Logika bisnis
+│   │   ├── auth_service.go
+│   │   └── session_service.go
+│   ├── repository/          # Akses database (GORM)
+│   │   ├── user_repo.go
+│   │   └── session_repo.go
+│   └── model/               # Entitas database
+│       ├── user.go
+│       └── session.go
+├── pkg/
+│   ├── middleware/          # JWT auth, CORS, rate limiter
+│   └── config/              # Konfigurasi lingkungan
+└── Dockerfile               # Container image untuk deployment
+```
+
+### g.7.2 Alur Sinkronisasi Data (*Offline-First Sync*)
+
+Strategi integrasi Golang dengan aplikasi Flutter menggunakan pendekatan ***Offline-First* dengan sinkronisasi latar belakang** (*background sync*). Aplikasi mobile tetap berfungsi penuh tanpa koneksi; data sesi yang belum tersinkronisasi ditandai dengan flag `synced: false` pada penyimpanan lokal dan dikirimkan ke backend secara *batch* ketika koneksi tersedia:
+
+```
+[Sesi Latihan Selesai]
+        │
+        ▼
+[Simpan lokal — SharedPreferences]
+[Tandai: synced = false]
+        │
+        ▼
+[Cek koneksi internet tersedia?]
+        │
+    ┌───┴────────────────┐
+  [Ya]                 [Tidak]
+    │                     │
+    ▼                     ▼
+[POST /api/v1/sessions/sync]   [Antri; coba lagi saat online]
+[Golang menerima batch JSON]
+[Simpan ke PostgreSQL]
+[Kembalikan response: synced = true]
+        │
+        ▼
+[Update flag lokal: synced = true]
+```
+
+### g.7.3 Desain API Endpoint Utama
+
+Berikut adalah spesifikasi endpoint RESTful API yang akan diimplementasikan pada backend Golang:
+
+```go
+// Contoh struktur handler sinkronisasi sesi — Golang + Gin
+func (h *SessionHandler) SyncSessions(c *gin.Context) {
+    userID := c.GetString("user_id") // dari JWT middleware
+    var sessions []model.Session
+    if err := c.ShouldBindJSON(&sessions); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+    if err := h.service.BulkUpsert(userID, sessions); err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "sync failed"})
+        return
+    }
+    c.JSON(http.StatusOK, gin.H{"synced": len(sessions)})
+}
+```
+
+Model data `Session` pada sisi Golang akan didesain isomorfis dengan model `Session` pada Flutter, memastikan serialisasi/deserialisasi JSON berjalan tanpa konversi tambahan:
+
+```go
+// model/session.go
+type Session struct {
+    ID              string    `json:"id" gorm:"primaryKey"`
+    UserID          string    `json:"user_id" gorm:"index"`
+    Date            time.Time `json:"date"`
+    ExerciseID      string    `json:"exerciseId"`
+    ExerciseName    string    `json:"exerciseName"`
+    RepsCompleted   int       `json:"repsCompleted"`
+    TotalReps       int       `json:"totalReps"`
+    DurationSeconds int       `json:"durationSeconds"`
+    Score           float64   `json:"score"`
+}
+```
+
+### g.7.4 Keamanan pada Lapisan Backend
+
+Implementasi keamanan pada backend Golang mencakup:
+- **Autentikasi JWT** (*JSON Web Token*): Setiap *request* ke endpoint terproteksi harus menyertakan token JWT yang diterbitkan pada saat login. Token diverifikasi oleh *middleware* sebelum handler dipanggil.
+- **HTTPS/TLS wajib**: Seluruh komunikasi antara aplikasi mobile dan backend harus dienkripsi menggunakan TLS 1.3, mencegah intersepsi data medis pengguna di jaringan.
+- **Rate Limiting**: Pembatasan jumlah *request* per IP menggunakan middleware rate limiter untuk mencegah serangan *brute-force* pada endpoint autentikasi.
+- **Validasi input ketat**: Seluruh payload JSON divalidasi menggunakan *struct tag* Go sebelum diproses oleh lapisan layanan, mencegah injeksi data malformed.
 
 ---
 

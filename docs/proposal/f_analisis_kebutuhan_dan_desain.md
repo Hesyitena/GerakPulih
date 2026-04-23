@@ -135,6 +135,36 @@ GerakPulih mengadopsi arsitektur **Edge-First Mobile Application** dengan paradi
 └─────────────────────────────────────────────────────────────┘
 ```
 
+### f.6.1 Rencana Arsitektur Tahap Lanjut (Client–Server)
+
+Sebagai bagian dari roadmap pengembangan jangka menengah, arsitektur sistem direncanakan untuk diperluas menjadi model **Client–Server** guna mendukung skenario penggunaan klinik (*B2B*) dan sinkronisasi data lintas-perangkat. Pada tahap ini, komponen *backend* akan dibangun menggunakan **Golang** sebagai layanan RESTful API yang terpisah dari aplikasi mobile:
+
+```
+┌────────────────────────────────────┐     HTTPS/REST
+│   Aplikasi Mobile (Flutter)        │ ◄─────────────────►
+│   [Tetap berjalan penuh secara     │                    │
+│    luring — Edge-AI tidak berubah] │         ┌──────────┴──────────────┐
+└────────────────────────────────────┘         │  Backend — Golang        │
+                                               │  ┌─────────────────────┐│
+                                               │  │  REST API (Gin/Fiber)││
+                                               │  │  Autentikasi (JWT)   ││
+                                               │  │  Sinkronisasi Sesi   ││
+                                               │  │  Analitik Progres    ││
+                                               │  └─────────────────────┘│
+                                               │  ┌─────────────────────┐│
+                                               │  │  Database            ││
+                                               │  │  (PostgreSQL)        ││
+                                               │  └─────────────────────┘│
+                                               └─────────────────────────┘
+                                                          ▲
+                                               ┌──────────┴──────────────┐
+                                               │  Dashboard Web Terapis  │
+                                               │  (Pemantauan Pasien)    │
+                                               └─────────────────────────┘
+```
+
+Pendekatan ini mempertahankan prinsip *offline-first* pada aplikasi mobile — seluruh fungsionalitas deteksi pose, umpan balik, dan pencatatan sesi lokal tetap beroperasi tanpa koneksi. Backend Golang hanya berperan sebagai lapisan sinkronisasi opsional yang diaktifkan ketika koneksi tersedia (*eventual consistency*).
+
 ---
 
 ## f.7 Alur Sistem (*System Flow*)
@@ -217,6 +247,26 @@ Untuk volume data yang dikelola (profil pengguna, maksimum 100 entri sesi), Shar
 
 ### f.8.5 Provider (State Management)
 Paket `provider` digunakan sebagai solusi manajemen *state* yang proporsional dengan kompleksitas aplikasi saat ini. Dibandingkan solusi yang lebih kompleks seperti BLoC atau Riverpod, `provider` menawarkan kurva pembelajaran yang lebih rendah dan boilerplate yang minimal tanpa mengorbankan kemampuan reaktivitas UI.
+
+### f.8.6 Golang — Rencana Backend Microservice
+
+Golang (Go) ditetapkan sebagai bahasa implementasi untuk komponen *backend* pada pengembangan tahap lanjut GerakPulih. Pemilihan Golang didasarkan atas sejumlah keunggulan teknis yang relevan dengan kebutuhan sistem:
+
+- **Konkurensi berbasis goroutine**: Model konkurensi Go menggunakan *goroutines* dan *channels* memungkinkan penanganan ribuan koneksi HTTP secara bersamaan dengan konsumsi memori yang sangat rendah (setiap goroutine hanya mengalokasikan ±2 KB stack awal), dibandingkan dengan model *thread-per-request* pada bahasa lain.
+- **Performa tinggi dengan latensi rendah**: Golang dikompilasi menjadi *native binary* tanpa *runtime* virtual machine, menghasilkan waktu respons API yang konsisten rendah — krusial untuk *endpoint* sinkronisasi data sesi yang dipanggil segera setelah pengguna menyelesaikan latihan.
+- **Ekosistem HTTP yang matang**: *Framework* seperti **Gin** atau **Fiber** menyediakan *routing* dan *middleware* yang efisien dengan overhead minimal, cocok untuk kebutuhan RESTful API sederhana yang direncanakan.
+- **Deployment ringan**: Golang menghasilkan *single binary* yang dapat dideploy langsung ke container Docker tanpa ketergantungan *runtime* eksternal, menyederhanakan proses *CI/CD* dan mengurangi ukuran *Docker image* secara signifikan.
+- **Konsistensi dengan paradigma keamanan sistem**: *Type safety* yang ketat pada Golang meminimalkan kelas kesalahan yang umum terjadi pada layanan web (misalnya *null pointer dereference* dan *integer overflow*), mendukung model keamanan data medis yang dibutuhkan.
+
+Dalam rencana integrasi, Golang akan menyediakan *endpoint* berikut:
+
+| Endpoint | Metode | Fungsi |
+|----------|--------|--------|
+| `/api/v1/auth/register` | POST | Registrasi akun pengguna |
+| `/api/v1/auth/login` | POST | Autentikasi dan penerbitan JWT |
+| `/api/v1/sessions/sync` | POST | Unggah batch riwayat sesi dari perangkat |
+| `/api/v1/sessions` | GET | Ambil riwayat sesi dari server |
+| `/api/v1/analytics/progress` | GET | Ringkasan progres untuk dashboard terapis |
 
 ---
 

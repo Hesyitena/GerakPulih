@@ -78,8 +78,8 @@ lib/
 | State Management | provider | ^6.1.2 | Manajemen state reaktif proporsional |
 | Tipografi | google_fonts | ^6.2.1 | Font Inter/Poppins dari Google Fonts |
 | Target Platform | Android ≥5.0, iOS ≥13.0 | — | Cakupan perangkat pasar Indonesia |
-| **Backend (Rencana)** | **Golang + Gin/Fiber** | **≥1.21** | **Microservice API: konkurensi tinggi, native binary** |
-| **Database (Rencana)** | **PostgreSQL + GORM** | **≥14.0** | **Persistensi data cloud, relasional, open-source** |
+| **Backend** | **Golang + Gin/Fiber** | **≥1.21** | **Microservice API: konkurensi tinggi, native binary** |
+| **Database** | **PostgreSQL + GORM** | **≥14.0** | **Persistensi data cloud, relasional, open-source** |
 
 ---
 
@@ -164,20 +164,20 @@ Model keamanan GerakPulih berpusat pada prinsip **privasi by design** (*privacy 
 
 ### g.6.3 Skalabilitas
 
-Meskipun versi saat ini beroperasi secara mandiri tanpa *backend*, arsitektur sistem dirancang untuk mendukung evolusi bertahap:
+Arsitektur sistem dirancang secara modular dan skalabel:
 - **Extensibilitas katalog latihan**: Penambahan gerakan baru hanya memerlukan penambahan entri `Exercise` baru pada `exercises_data.dart` dengan konfigurasi `PoseConfig` yang sesuai, tanpa perubahan pada logika deteksi inti.
-- **Abstraksi layanan yang bersih**: `StorageService` dapat disubstitusi dengan implementasi berbasis *backend* Golang tanpa mengubah logika di lapisan UI, berkat pola antarmuka yang terdefinisi dengan jelas.
+- **Pemisahan Layanan (*Service Decoupling*)**: Komunikasi antara aplikasi mobile dan backend dipisahkan secara tegas melalui antarmuka REST API, sehingga perubahan pada logika *backend* tidak akan memengaruhi stabilitas sisi *client*.
 - **Modularitas layar**: Setiap tab diimplementasikan sebagai `StatefulWidget` independen, memudahkan penambahan fitur baru sebagai tab tambahan tanpa mengganggu modul yang sudah ada.
 
 ---
 
-## g.7 Rencana Pengembangan Lanjutan: Backend Golang
+## g.7 Implementasi Lapisan Backend (Golang)
 
-Pada iterasi pengembangan selanjutnya pasca-kompetisi, sistem GerakPulih direncanakan untuk diperluas dengan komponen *backend* berbasis **Golang**. Keputusan ini didasarkan pada kebutuhan yang muncul seiring peningkatan skala pengguna, yaitu: sinkronisasi data lintas-perangkat, sistem autentikasi terpusat, dan penyediaan *dashboard* pemantauan jarak jauh bagi tenaga medis.
+Untuk mengakomodasi sinkronisasi data lintas-perangkat, sistem autentikasi terpusat, dan penyediaan *dashboard* pemantauan jarak jauh bagi tenaga medis, sistem GerakPulih telah diintegrasikan dengan komponen *backend* berbasis **Golang**.
 
-### g.7.1 Rencana Struktur Repositori Backend
+### g.7.1 Struktur Repositori Backend
 
-Komponen backend akan dikembangkan sebagai repositori terpisah dengan struktur sebagai berikut:
+Komponen backend dikembangkan sebagai repositori terpisah dengan struktur sebagai berikut:
 
 ```
 gerakpulih-backend/          # Repositori Golang (terpisah)
@@ -233,7 +233,7 @@ Strategi integrasi Golang dengan aplikasi Flutter menggunakan pendekatan ***Offl
 
 ### g.7.3 Desain API Endpoint Utama
 
-Berikut adalah spesifikasi endpoint RESTful API yang akan diimplementasikan pada backend Golang:
+Berikut adalah spesifikasi endpoint RESTful API yang diimplementasikan pada backend Golang:
 
 ```go
 // Contoh struktur handler sinkronisasi sesi — Golang + Gin

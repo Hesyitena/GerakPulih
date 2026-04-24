@@ -15,7 +15,7 @@ Sebelum melakukan instalasi, pastikan perangkat memenuhi spesifikasi minimum ber
 | RAM | 2 GB |
 | Penyimpanan | 150 MB ruang kosong |
 | Kamera | Kamera depan dengan resolusi minimum 720p |
-| Sensor | Giroskop (untuk orientasi kamera) |
+
 
 Untuk performa inferensi AI yang optimal, sangat dianjurkan menggunakan perangkat dengan prosesor Snapdragon 665 atau lebih tinggi, maupun Helio G85 atau setara, yang memiliki dukungan akselerasi komputasi GPU untuk model *machine learning*.
 
@@ -23,7 +23,7 @@ Untuk performa inferensi AI yang optimal, sangat dianjurkan menggunakan perangka
 
 Bagi pengguna akhir yang menerima berkas APK distribusi:
 
-1. Unduh berkas `gerakpulih-v1.0.apk` ke perangkat Android.
+1. Unduh berkas `gerakpulih-v1.0.apk` ke perangkat Android melalui tautan yang disediakan tim pengembang pada dokumen lampiran (misalnya via Google Drive atau GitHub Releases).
 2. Buka **Pengaturan** → **Keamanan** → Aktifkan opsi **"Instal dari sumber tidak dikenal"** (atau "Instal aplikasi tidak dikenal" pada Android 8.0 ke atas, diaktifkan per-aplikasi pada aplikasi manajer berkas yang digunakan).
 3. Buka berkas APK melalui manajer berkas atau notifikasi unduhan.
 4. Ketuk **"Instal"** dan tunggu proses selesai.

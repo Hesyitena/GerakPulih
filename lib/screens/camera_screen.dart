@@ -54,8 +54,8 @@ class _CameraScreenState extends State<CameraScreen> {
         (c) => c.lensDirection == CameraLensDirection.front,
         orElse: () => cameras.first);
 
-    _cameraCtrl = CameraController(front, ResolutionPreset.high, enableAudio: false,
-        imageFormatGroup: ImageFormatGroup.yuv420);
+    _cameraCtrl = CameraController(front, ResolutionPreset.high,
+        enableAudio: false, imageFormatGroup: ImageFormatGroup.yuv420);
     await _cameraCtrl!.initialize();
 
     _poseDetector = PoseDetector(
@@ -78,7 +78,10 @@ class _CameraScreenState extends State<CameraScreen> {
 
     try {
       final inputImage = _buildInputImage(image);
-      if (inputImage == null) { _isProcessing = false; return; }
+      if (inputImage == null) {
+        _isProcessing = false;
+        return;
+      }
 
       final poses = await _poseDetector!.processImage(inputImage);
 
@@ -118,12 +121,14 @@ class _CameraScreenState extends State<CameraScreen> {
     final lmC = pose.landmarks[PoseLandmarkType.values[config.jointC]];
 
     if (lmA == null || lmB == null || lmC == null) {
-      _updateFeedback(FeedbackStatus.bad, 'Pastikan seluruh tubuh terlihat kamera');
+      _updateFeedback(
+          FeedbackStatus.bad, 'Pastikan seluruh tubuh terlihat kamera');
       return;
     }
 
     if (lmA.likelihood < 0.5 || lmB.likelihood < 0.5 || lmC.likelihood < 0.5) {
-      _updateFeedback(FeedbackStatus.bad, 'Posisikan tubuh lebih dekat ke kamera');
+      _updateFeedback(
+          FeedbackStatus.bad, 'Posisikan tubuh lebih dekat ke kamera');
       return;
     }
 
@@ -146,7 +151,8 @@ class _CameraScreenState extends State<CameraScreen> {
     } else if (angle > (up + down) / 2) {
       _updateFeedback(FeedbackStatus.warning, 'Hampir benar, sedikit lagi!');
     } else {
-      _updateFeedback(FeedbackStatus.bad, widget.exercise.audioPrompts['tooLow']!);
+      _updateFeedback(
+          FeedbackStatus.bad, widget.exercise.audioPrompts['tooLow']!);
       TtsService.instance.speak(widget.exercise.audioPrompts['tooLow']!);
     }
 
@@ -157,7 +163,8 @@ class _CameraScreenState extends State<CameraScreen> {
       HapticFeedback.mediumImpact();
       TtsService.instance.speak(widget.exercise.audioPrompts['repDone']!);
       if (_reps >= widget.exercise.reps) {
-        TtsService.instance.speakImmediate('Luar biasa! Target ${widget.exercise.reps} repetisi tercapai!');
+        TtsService.instance.speakImmediate(
+            'Luar biasa! Target ${widget.exercise.reps} repetisi tercapai!');
       }
     }
     if (angle < down * 1.2) {
@@ -177,7 +184,10 @@ class _CameraScreenState extends State<CameraScreen> {
 
   void _updateFeedback(FeedbackStatus status, String text) {
     if (_feedbackStatus == status && _feedbackText == text) return;
-    setState(() { _feedbackStatus = status; _feedbackText = text; });
+    setState(() {
+      _feedbackStatus = status;
+      _feedbackText = text;
+    });
   }
 
   void _togglePause() {
@@ -282,7 +292,8 @@ class _CameraScreenState extends State<CameraScreen> {
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 10),
                     decoration: BoxDecoration(
                       color: Colors.black.withOpacity(0.5),
                       borderRadius: BorderRadius.circular(99),
@@ -292,7 +303,11 @@ class _CameraScreenState extends State<CameraScreen> {
                       children: [
                         Icon(Icons.close, color: Colors.white, size: 16),
                         SizedBox(width: 6),
-                        Text('Keluar', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13)),
+                        Text('Keluar',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 13)),
                       ],
                     ),
                   ),
@@ -305,14 +320,18 @@ class _CameraScreenState extends State<CameraScreen> {
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   decoration: BoxDecoration(
                     color: Colors.black.withOpacity(0.5),
                     borderRadius: BorderRadius.circular(99),
                     border: Border.all(color: Colors.white.withOpacity(0.2)),
                   ),
                   child: Text(widget.exercise.name,
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13)),
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13)),
                 ),
               ),
             ),
@@ -332,11 +351,14 @@ class _CameraScreenState extends State<CameraScreen> {
       curve: Curves.easeOut,
       margin: const EdgeInsets.symmetric(horizontal: 24),
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-      decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(99),
+      decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(99),
           border: Border.all(color: Colors.white.withOpacity(0.4))),
       child: Text(_feedbackText,
           textAlign: TextAlign.center,
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 15)),
+          style: const TextStyle(
+              color: Colors.white, fontWeight: FontWeight.w900, fontSize: 15)),
     );
   }
 
@@ -355,13 +377,23 @@ class _CameraScreenState extends State<CameraScreen> {
             child: Column(
               children: [
                 Text('$_reps / ${widget.exercise.reps}',
-                    style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w900,
-                        color: Colors.white, fontFeatures: [FontFeature.tabularFigures()])),
-                const Text('REPETISI', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800,
-                    color: Colors.white60, letterSpacing: 1.5)),
+                    style: const TextStyle(
+                        fontSize: 40,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                        fontFeatures: [FontFeature.tabularFigures()])),
+                const Text('REPETISI',
+                    style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white60,
+                        letterSpacing: 1.5)),
                 const SizedBox(height: 4),
                 Text('${_angle.toStringAsFixed(0)}°',
-                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white70)),
+                    style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white70)),
               ],
             ),
           ),
@@ -370,7 +402,9 @@ class _CameraScreenState extends State<CameraScreen> {
 
   Widget _buildControls() => Container(
         padding: EdgeInsets.only(
-          left: 32, right: 32, top: 20,
+          left: 32,
+          right: 32,
+          top: 20,
           bottom: MediaQuery.of(context).padding.bottom + 20,
         ),
         decoration: const BoxDecoration(
@@ -394,19 +428,29 @@ class _CameraScreenState extends State<CameraScreen> {
             GestureDetector(
               onTap: _togglePause,
               child: Container(
-                width: 72, height: 72,
+                width: 72,
+                height: 72,
                 decoration: BoxDecoration(
                   color: AppTheme.primary,
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white.withOpacity(0.5), width: 2),
-                  boxShadow: [BoxShadow(color: AppTheme.primary.withOpacity(0.4), blurRadius: 20)],
+                  border: Border.all(
+                      color: Colors.white.withOpacity(0.5), width: 2),
+                  boxShadow: [
+                    BoxShadow(
+                        color: AppTheme.primary.withOpacity(0.4),
+                        blurRadius: 20)
+                  ],
                 ),
-                child: Icon(_isPaused ? Icons.play_arrow_rounded : Icons.pause_rounded,
-                    color: Colors.white, size: 36),
+                child: Icon(
+                    _isPaused ? Icons.play_arrow_rounded : Icons.pause_rounded,
+                    color: Colors.white,
+                    size: 36),
               ),
             ),
             _ctrlBtn(
-              icon: _audioEnabled ? Icons.volume_up_rounded : Icons.volume_off_rounded,
+              icon: _audioEnabled
+                  ? Icons.volume_up_rounded
+                  : Icons.volume_off_rounded,
               label: _audioEnabled ? 'Suara' : 'Bisu',
               color: Colors.white.withOpacity(0.15),
               iconColor: Colors.white,
@@ -417,21 +461,31 @@ class _CameraScreenState extends State<CameraScreen> {
       );
 
   Widget _ctrlBtn({
-    required IconData icon, required String label,
-    required Color color, required Color iconColor, required VoidCallback onTap,
+    required IconData icon,
+    required String label,
+    required Color color,
+    required Color iconColor,
+    required VoidCallback onTap,
   }) =>
       GestureDetector(
         onTap: onTap,
         child: Column(
           children: [
             Container(
-              width: 56, height: 56,
-              decoration: BoxDecoration(shape: BoxShape.circle, color: color,
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: color,
                   border: Border.all(color: Colors.white.withOpacity(0.2))),
               child: Icon(icon, color: iconColor, size: 24),
             ),
             const SizedBox(height: 6),
-            Text(label, style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w700)),
+            Text(label,
+                style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700)),
           ],
         ),
       );
